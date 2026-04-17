@@ -81,9 +81,27 @@ namespace DiGi.Serilog
             return Log(Assembly.GetCallingAssembly(), message, parameters);
         }
 
-        public static bool Log(Exception? exception, string? message, params object[] parameters)
+        public static bool Log(Exception? exception, string? message)
         {
-            return Log(Assembly.GetCallingAssembly(), message, parameters);
+            if(exception is null && message is null)
+            {
+                return false;
+            }
+
+            Logger? logger = Settings.LoggerManager?.GetLogger(Assembly.GetCallingAssembly());
+            if (logger is null)
+            {
+                return false;
+            }
+
+            if(exception is null)
+            {
+                logger.Error(message!);
+                return true;
+            }
+
+            logger.Error(exception, message!);
+            return true;
         }
     }
 }
