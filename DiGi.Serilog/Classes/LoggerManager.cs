@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System.Collections.Generic;
@@ -7,11 +7,20 @@ using System.Reflection;
 
 namespace DiGi.Serilog.Classes
 {
+    /// <summary>
+    /// Manages the creation and retrieval of logger instances associated with specific assemblies.
+    /// </summary>
     public class LoggerManager
     {
         // Using a more modern dictionary initialization
         private readonly Dictionary<string, Logger> loggers = [];
 
+        /// <summary>
+        /// Retrieves an existing logger for the specified assembly or creates a new one if requested.
+        /// </summary>
+        /// <param name="assembly">The assembly used to determine the directory and path for the log file.</param>
+        /// <param name="create">A value indicating whether a new logger should be created if an existing one is not found. Defaults to true.</param>
+        /// <returns>The <see cref="Logger"/> instance associated with the assembly, or <c>null</c> if the assembly is null, the path cannot be determined, or creation is disabled and no logger exists.</returns>
         public Logger? GetLogger(Assembly? assembly, bool create = true)
         {
             if (assembly is null)
