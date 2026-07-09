@@ -1,4 +1,4 @@
-#### [DiGi\.Serilog](index.md 'index')
+#### [DiGi\.Serilog](DiGi.Serilog.Overview.md 'DiGi\.Serilog\.Overview')
 
 ## DiGi\.Serilog Assembly
 
