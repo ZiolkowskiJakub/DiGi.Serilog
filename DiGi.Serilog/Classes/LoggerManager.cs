@@ -1,6 +1,7 @@
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -30,13 +31,13 @@ namespace DiGi.Serilog.Classes
 
             // Optimization: Get directory once and validate
             string? assemblyLocation = assembly.Location;
-            if (string.IsNullOrEmpty(assemblyLocation))
-            {
-                return null;
-            }
 
-            string? baseDirectory = Path.GetDirectoryName(assemblyLocation);
-            if (baseDirectory is null)
+            // An assembly bundled into a single-file application reports an empty location, which used to
+            // leave every log call on a published app silently doing nothing - the application ran, reported
+            // success, and wrote no record of it anywhere. The directory the application was launched from is
+            // the answer in that case; assemblies sharing it share one log, which is what a bundle is.
+            string? baseDirectory = string.IsNullOrEmpty(assemblyLocation) ? AppContext.BaseDirectory : Path.GetDirectoryName(assemblyLocation);
+            if (string.IsNullOrEmpty(baseDirectory))
             {
                 return null;
             }
