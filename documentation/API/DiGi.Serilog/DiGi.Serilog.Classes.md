@@ -9,7 +9,9 @@
 
 Manages the creation and retrieval of logger instances\.
 
-One application writes one log. The directory is the one the application was launched from, so every assembly it loads - whichever repository each was built in - reports into the same file.
+By default one application writes one log. The directory is the one the application was launched from, so every assembly it loads - whichever repository each was built in - reports into the same file. Deriving the log location from the calling assembly's own location used to split one application's output across files whenever its assemblies were deployed to different folders, and an assembly bundled into a single-file application reported no location at all, which silently disabled logging.
+
+When [RoutePerAssembly](DiGi.Serilog.Classes.md#DiGi.Serilog.Classes.LoggerManager.RoutePerAssembly 'DiGi\.Serilog\.Classes\.LoggerManager\.RoutePerAssembly') is enabled, an assembly that has a resolvable location writes its log beside itself instead. A modular host that loads extensions from sub-folders uses this so every extension keeps its own `logs` folder while the host keeps the one beside the application. The explicit [Directory](DiGi.Serilog.Classes.md#DiGi.Serilog.Classes.LoggerManager.Directory 'DiGi\.Serilog\.Classes\.LoggerManager\.Directory') override always wins.
 
 ```csharp
 public class LoggerManager
@@ -22,7 +24,7 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 
 ## LoggerManager\.Directory Property
 
-Gets or sets the directory the `logs` folder is created in\. When null the directory the application was launched from is used\.
+Gets or sets the directory the `logs` folder is created in\. When null the directory the application was launched from is used, or the requesting assembly's own directory when [RoutePerAssembly](DiGi.Serilog.Classes.md#DiGi.Serilog.Classes.LoggerManager.RoutePerAssembly 'DiGi\.Serilog\.Classes\.LoggerManager\.RoutePerAssembly') is enabled\.
 
 ```csharp
 public string? Directory { get; set; }
@@ -30,6 +32,19 @@ public string? Directory { get; set; }
 
 #### Property Value
 [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+<a name='DiGi.Serilog.Classes.LoggerManager.RoutePerAssembly'></a>
+
+## LoggerManager\.RoutePerAssembly Property
+
+Gets or sets a value indicating whether a logger writes into the directory of the assembly requesting it instead of the directory the application was launched from\. Defaults to false, so one application writes one log no matter where its assemblies were deployed\.
+
+```csharp
+public bool RoutePerAssembly { get; set; }
+```
+
+#### Property Value
+[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')
 ### Methods
 
 <a name='DiGi.Serilog.Classes.LoggerManager.GetLogger(System.Reflection.Assembly,bool)'></a>
@@ -38,7 +53,7 @@ public string? Directory { get; set; }
 
 Retrieves an existing logger for the specified assembly or creates a new one if requested\.
 
-The log location does not depend on the assembly. It used to be derived from the calling assembly's own location, which put a task's report beside its own library rather than beside the application: two tasks of the same application logged to two different files whenever their libraries were deployed to different folders, and one of them looked as though it had produced no output at all. An assembly bundled into a single-file application made it worse by reporting no location, which silently disabled logging altogether.
+Concurrent first-time requests for the same path resolve to a single [Serilog\.Core\.Logger](https://learn.microsoft.com/en-us/dotnet/api/serilog.core.logger 'Serilog\.Core\.Logger'), so controller code logging in parallel never races on the cache.
 
 ```csharp
 public Serilog.Core.Logger? GetLogger(System.Reflection.Assembly? assembly, bool create=true);
@@ -49,7 +64,7 @@ public Serilog.Core.Logger? GetLogger(System.Reflection.Assembly? assembly, bool
 
 `assembly` [System\.Reflection\.Assembly](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assembly 'System\.Reflection\.Assembly')
 
-The assembly asking for the logger\. Retained so a caller can be identified, but it no longer decides where the log is written\.
+The assembly asking for the logger\. With [RoutePerAssembly](DiGi.Serilog.Classes.md#DiGi.Serilog.Classes.LoggerManager.RoutePerAssembly 'DiGi\.Serilog\.Classes\.LoggerManager\.RoutePerAssembly') enabled and a resolvable location it also decides where the log is written; otherwise it is retained so a caller can be identified\.
 
 <a name='DiGi.Serilog.Classes.LoggerManager.GetLogger(System.Reflection.Assembly,bool).create'></a>
 
