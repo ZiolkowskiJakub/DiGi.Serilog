@@ -93,7 +93,11 @@ namespace DiGi.Serilog.Classes
                 .WriteTo.File(
                     path: logPath,
                     rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: 7,
+                    // A day of a bulk task exceeds the 1 GB default file size limit in ~8 h; without rolling on size
+                    // Serilog silently drops everything after it, including a run's closing summary. The limit is
+                    // kept so one file stays openable, and the count is per segment now, not per day.
+                    rollOnFileSizeLimit: true,
+                    retainedFileCountLimit: 31,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
         }
